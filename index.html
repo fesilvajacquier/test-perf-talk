@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cocineros Rubyistas: una suite de tests 5× más rápida</title>
+  <link rel="stylesheet" href="vendor/reveal/reset.css">
+  <link rel="stylesheet" href="vendor/reveal/reveal.css">
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <style>
+    :root {
+      --cream: #fbf5ea;
+      --paper: #fffdf8;
+      --ink: #22201c;
+      --muted: #6b645a;
+      --tomato: #d6382c;
+      --tomato-dark: #a8251c;
+      --mustard: #f2b134;
+      --basil: #3f7d3a;
+      --line: #e7dcc8;
+      --gingham: repeating-linear-gradient(0deg, rgba(214,56,44,.55) 0 22px, transparent 22px 44px),
+                 repeating-linear-gradient(90deg, rgba(214,56,44,.55) 0 22px, transparent 22px 44px);
+    }
+    html, body { background: var(--cream); }
+    .reveal { font-family: 'DM Sans', system-ui, sans-serif; font-size: 30px; color: var(--ink); }
+    .reveal .slides { text-align: left; }
+    .reveal .slides section { height: 100%; }
+    .reveal h1, .reveal h2, .reveal h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 900; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 .4em; }
+    .reveal h1 { font-size: 3.4em; }
+    .reveal h2 { font-size: 2.1em; }
+    .reveal h3 { font-size: 1.3em; }
+    .reveal p { margin: 0 0 .6em; line-height: 1.35; }
+    .reveal strong { font-weight: 700; }
+    .reveal img { display: block; max-width: 100%; }
+    .reveal .muted { color: var(--muted); }
+    .reveal .small { font-size: .78em; }
+    .reveal .tomato { color: var(--tomato); }
+    .reveal .basil { color: var(--basil); }
+    .reveal .center { text-align: center; }
+
+    .reveal .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; }
+    .reveal .split { position: absolute; inset: 0; display: grid; grid-template-columns: 42% 1fr; gap: 56px; align-items: center; }
+    .reveal .split.wide-img { grid-template-columns: 48% 1fr; }
+    .reveal .meme { max-height: 600px; margin: 0 auto; border-radius: 10px; box-shadow: 0 14px 40px rgba(34,32,28,.22); transform: rotate(-1.5deg); }
+    .reveal .photo { filter: grayscale(1) contrast(1.05); border-radius: 6px; box-shadow: 0 14px 40px rgba(34,32,28,.25); }
+    .reveal .polaroid { background: #fff; padding: 14px 14px 46px; box-shadow: 0 14px 40px rgba(34,32,28,.25); transform: rotate(2deg); }
+    .reveal .polaroid figcaption { font-family: 'Fraunces', serif; font-size: .55em; text-align: center; margin-top: 10px; color: var(--muted); }
+    .reveal .credit { position: absolute; bottom: -8px; left: 0; font-size: .38em; color: var(--muted); }
+
+    .reveal .lower-third { display: inline-flex; align-items: stretch; margin-bottom: 28px; box-shadow: 0 6px 0 rgba(34,32,28,.12); }
+    .reveal .lower-third .tag { background: var(--mustard); color: var(--ink); font-weight: 700; padding: 10px 18px; font-size: .7em; letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; }
+    .reveal .lower-third .title { background: var(--tomato); color: #fff; font-family: 'Fraunces', serif; font-weight: 900; padding: 10px 24px; font-size: 1.15em; }
+
+    .reveal code, .reveal pre { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    .reveal pre { background: var(--ink); color: #f6efe2; border-radius: 12px; padding: 22px 28px; font-size: .68em; line-height: 1.5; margin: 18px 0; white-space: pre; box-shadow: 0 10px 28px rgba(34,32,28,.2); overflow: hidden; }
+    .reveal pre.big { font-size: .82em; }
+    .reveal :not(pre) > code { background: #efe4cf; padding: .05em .3em; border-radius: 6px; font-size: .9em; }
+    .reveal pre .c { color: #9a917f; }
+    .reveal pre .k { color: #ff8a6b; }
+    .reveal pre .s { color: #b9e08a; }
+    .reveal pre .y { color: #f6c35b; }
+    .reveal pre .del { color: #ff8a6b; text-decoration: line-through; }
+
+    .reveal .stat { display: flex; align-items: baseline; gap: 18px; margin-top: 10px; }
+    .reveal .stat .num { white-space: nowrap; }
+    .reveal .stat .num { font-family: 'Fraunces', serif; font-weight: 900; font-size: 2.6em; color: var(--tomato); line-height: 1; }
+    .reveal .stat .what { font-size: .8em; color: var(--muted); }
+    .reveal .pill { display: inline-block; background: var(--basil); color: #fff; border-radius: 999px; padding: 4px 16px; font-weight: 700; font-size: .7em; }
+
+    .reveal .title-slide { position: absolute; inset: 0; display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: center; }
+    .reveal .title-slide .kicker { font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--tomato); font-size: .65em; margin-bottom: 18px; }
+    .reveal .title-slide h1 { margin-bottom: .25em; }
+    .reveal .title-slide .dish { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.2em; line-height: 1.2; }
+    .reveal .title-slide .byline { margin-top: 30px; font-size: .62em; color: var(--muted); }
+    .reveal .gingham { position: absolute; left: -200px; right: -200px; bottom: -60px; height: 70px; background: var(--gingham), #fff; }
+
+    .reveal .card { background: var(--paper); border: 2px dashed var(--line); border-radius: 16px; padding: 34px 44px; box-shadow: 0 16px 40px rgba(34,32,28,.12); position: relative; }
+    .reveal .recipe { width: 900px; margin: 0 auto; transform: rotate(-.8deg); }
+    .reveal .recipe h2 { font-size: 1.6em; border-bottom: 3px solid var(--tomato); padding-bottom: 12px; }
+    .reveal .recipe dl { display: grid; grid-template-columns: 290px 1fr; row-gap: 14px; margin: 0; }
+    .reveal .recipe dt { font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: .7em; padding-top: .25em; }
+    .reveal .recipe dd { margin: 0; font-size: 1em; }
+    .reveal .stamp { position: absolute; right: -40px; top: -40px; width: 190px; height: 190px; border-radius: 50%; border: 6px double var(--tomato); color: var(--tomato); display: grid; place-items: center; text-align: center; font-family: 'Fraunces', serif; font-weight: 900; font-size: .62em; line-height: 1.1; transform: rotate(14deg); background: rgba(255,253,248,.92); text-transform: uppercase; }
+
+    .reveal .ingredients { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+    .reveal .ingredient { background: var(--paper); border: 2px solid var(--line); border-radius: 16px; padding: 28px 28px; }
+    .reveal .ingredient .emoji { font-size: 2.4em; line-height: 1; }
+    .reveal .ingredient .qty { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.2em; margin: 14px 0 6px; }
+    .reveal .ingredient .name { color: var(--muted); font-size: .78em; }
+
+    .reveal .plates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin: 10px 0 34px; }
+    .reveal .plate { background: var(--paper); border: 2px solid var(--line); border-radius: 50% 50% 18px 18px / 26% 26% 18px 18px; padding: 34px 26px 24px; text-align: center; }
+    .reveal .plate .emoji { font-size: 2.6em; }
+    .reveal .plate h3 { font-size: 1.05em; margin: 10px 0 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0; }
+    .reveal .plate p { font-size: .8em; color: var(--muted); }
+    .reveal .plate .saved { font-family: 'Fraunces', serif; font-weight: 900; color: var(--tomato); font-size: 1.6em; }
+    .reveal .rule { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.35em; text-align: center; background: var(--mustard); padding: 16px 26px; border-radius: 12px; transform: rotate(-1deg); }
+
+    .reveal .relator { font-family: 'Fraunces', serif; font-weight: 900; font-size: 4.4em; line-height: .9; color: var(--tomato); letter-spacing: -0.03em; margin-bottom: 14px; }
+    .reveal .relator span { display: inline-block; animation: shake .35s infinite alternate; }
+    @keyframes shake { from { transform: rotate(-2deg) } to { transform: rotate(2deg) translateY(-4px) } }
+
+    .reveal .hash { display: inline-block; max-width: 1.2ch; overflow: hidden; vertical-align: bottom; transition: max-width .5s ease, opacity .5s ease; }
+    .reveal .hash.fragment.fade-out.visible { max-width: 0; }
+    .reveal .hash + .line { transition: color .5s ease; color: #9a917f; }
+    .reveal .hash.visible + .line { color: #b9e08a; }
+
+    .reveal .rules { list-style: none; margin: 0; padding: 0; counter-reset: r; }
+    .reveal .rules li { counter-increment: r; display: grid; grid-template-columns: 70px 1fr; align-items: baseline; margin: 0 0 22px; font-size: 1.05em; }
+    .reveal .rules li::before { content: counter(r); font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.7em; color: var(--tomato); }
+    .reveal .rules li small { display: block; color: var(--muted); font-size: .7em; margin-top: 4px; }
+
+    .reveal .chart { display: grid; grid-template-columns: 300px 1fr; row-gap: 12px; column-gap: 20px; align-items: center; }
+    .reveal .chart .label { font-size: .72em; text-align: right; color: var(--muted); }
+    .reveal .chart .label b { color: var(--ink); }
+    .reveal .chart .track { position: relative; height: 48px; }
+    .reveal .chart .bar { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--w) * 1%); min-width: 90px; background: var(--mustard); border-radius: 0 8px 8px 0; transform-origin: left; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .7em; }
+    .reveal .chart .bar.first { background: var(--ink); color: var(--cream); }
+    .reveal .chart .bar.last { background: var(--tomato); color: #fff; }
+    .reveal section.present .chart .bar { animation: grow .9s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * .3s); }
+    @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .reveal .big-stamp { position: absolute; right: 250px; bottom: 30px; width: 240px; height: 240px; border-radius: 50%; background: var(--tomato); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: 'Fraunces', serif; font-weight: 900; font-size: 3.6em; line-height: .9; box-shadow: 0 14px 40px rgba(214,56,44,.4); transform: rotate(-10deg); }
+    .reveal .big-stamp .x { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: .7em; }
+    .reveal .big-stamp small { display: block; font-size: .2em; letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
+    .reveal .big-stamp.fragment { transform: rotate(-10deg) scale(2.2); opacity: 0; transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .2s; }
+    .reveal .big-stamp.fragment.visible { transform: rotate(-10deg) scale(1); opacity: 1; }
+
+    .reveal .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 30px; text-align: center; margin: 20px 0 30px; }
+    .reveal .versus .big { font-family: 'Fraunces', serif; font-weight: 900; font-size: 4.6em; line-height: 1; }
+    .reveal .versus .before { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 6px; text-decoration-color: rgba(214,56,44,.6); }
+    .reveal .versus .after { color: var(--basil); }
+    .reveal .versus .arrow { font-size: 2.4em; color: var(--tomato); }
+    .reveal .versus .cap { font-size: .62em; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+
+    .reveal .tips { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .reveal .tip { background: var(--paper); border-left: 8px solid var(--tomato); border-radius: 10px; padding: 28px 30px; font-size: 1em; box-shadow: 0 8px 20px rgba(34,32,28,.08); }
+    .reveal .tip b { display: block; font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.15em; margin-bottom: 6px; }
+
+    .reveal .finale { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .reveal .finale h1 { font-size: 4.6em; color: var(--tomato); }
+
+    #tv-bug { position: fixed; top: 22px; right: 26px; z-index: 30; display: flex; align-items: center; gap: 10px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: rgba(255,253,248,.85); border: 2px solid var(--ink); border-radius: 8px; padding: 6px 12px; }
+    #tv-bug .live { display: inline-flex; align-items: center; gap: 6px; color: var(--tomato); }
+    #tv-bug .live::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--tomato); animation: blink 1.2s infinite; }
+    @keyframes blink { 50% { opacity: .15; } }
+    #kitchen-timer { position: fixed; bottom: 22px; left: 26px; z-index: 30; display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 22px; color: var(--ink); background: var(--mustard); border-radius: 999px; padding: 6px 18px 6px 10px; box-shadow: 0 6px 16px rgba(34,32,28,.18); transition: background .3s, color .3s; }
+    #kitchen-timer.hurry { background: var(--tomato); color: #fff; }
+    #kitchen-timer.hidden { display: none; }
+    .reveal .slide-number { background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; right: 26px; bottom: 22px; }
+    .reveal a.tip-link { color: var(--tomato); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+    .reveal .controls { color: var(--tomato); }
+    .reveal .progress { color: var(--tomato); height: 5px; }
+  </style>
+</head>
+<body>
+<div id="tv-bug">Canal Ruby Sur <span class="live">En vivo</span></div>
+<div id="kitchen-timer" title="T: mostrar/ocultar · R: reiniciar">⏲️ <span>5:00</span></div>
+
+<div class="reveal">
+<div class="slides">
+
+<section>
+  <div class="title-slide">
+    <div>
+      <div class="kicker">Canal Ruby Sur presenta</div>
+      <h1>Cocineros<br><span class="tomato">Rubyistas</span></h1>
+      <p class="dish">Hoy: una suite de tests <span class="tomato">5× más rápida</span>,<br>sin sacar ni un solo test.</p>
+      <p class="byline">@fesilvajacquier · Meetup Ruby Sur · 20 de octubre de 2026</p>
+    </div>
+    <div>
+      <img class="photo" src="img/templates/petrona_1978.jpg" alt="Doña Petrona en el set de Canal 9, 1978">
+    </div>
+  </div>
+  <div class="gingham"></div>
+  <aside class="notes">
+    (Tono de conductor de programa de cocina, sonrisa de TV.)
+    ¡Buenas noches, Buenos Aires! Bienvenidos a Cocineros Rubyistas.
+    Como en todo programa de cocina, en cinco minutos les voy a mostrar una receta que en la vida real lleva bastante más.
+    La de hoy: una suite de tests cinco veces más rápida. Y sin sacar ni un solo test.
+    (La foto es Doña Petrona en Canal 9, 1978. Dominio público.)
+    ~15 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+    <div class="card recipe">
+      <div class="stamp">Ningún test<br>fue lastimado</div>
+      <h2>Ficha de la receta</h2>
+      <dl>
+        <dt>Plato</dt><dd>Suite de tests Rails, al horno</dd>
+        <dt>Porciones</dt><dd><strong>5.267 tests</strong> · 26.734 assertions</dd>
+        <dt>Cocina</dt><dd>App Rails 8.1 multi-tenant · Minitest · Postgres</dd>
+        <dt>Cocción original</dt><dd><strong class="tomato">709 segundos</strong></dd>
+        <dt>Cocción nueva</dt><dd><strong class="basil">~71 segundos</strong></dd>
+        <dt>Dificultad</dt><dd>🥄 Casi todo es configuración</dd>
+      </dl>
+    </div>
+  </div>
+  <aside class="notes">
+    La receta de hoy: una app Rails multi-tenant del trabajo. Cinco mil doscientos tests, veintiséis mil assertions.
+    En mi notebook tardaban 709 segundos. Ahora tardan unos 142.
+    Y la dificultad es una cuchara de madera: casi todo es configuración. No reescribí ni un test.
+    ~15 s
+  </aside>
+</section>
+
+<section>
+  <div class="split wide-img">
+    <img class="meme" src="img/memes/skeleton.jpg" alt="Meme del esqueleto esperando en un banco: 'Yo esperando bin/rails test, 709 segundos'">
+    <div>
+      <h2>11 minutos<br>y 49 segundos</h2>
+      <p>Esta charla dura <strong class="tomato">menos</strong><br>que mi suite de tests.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    709 segundos son once minutos y cuarenta y nueve.
+    O sea: esta charla dura menos que mi suite de tests. Si la largaba al empezar a hablar, no llegaba a terminar.
+    ~10 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Mise en place</span><span class="title">Los ingredientes</span></div>
+  <div class="ingredients">
+    <div class="ingredient"><div class="emoji">🔥</div><div class="qty">1 línea descomentada</div><div class="name">parallelize</div></div>
+    <div class="ingredient"><div class="emoji">🧂</div><div class="qty">1 pizca de sal</div><div class="name">bcrypt al costo mínimo</div></div>
+    <div class="ingredient"><div class="emoji">🍽️</div><div class="qty">1 página de 404 barata</div><div class="name">consider_all_requests_local</div></div>
+    <div class="ingredient"><div class="emoji">🗑️</div><div class="qty">3 cosas que nadie comía</div><div class="name">SimpleCov · progress bar · Bullet</div></div>
+    <div class="ingredient"><div class="emoji">🔇</div><div class="qty">1 relator menos</div><div class="name">log level warn</div></div>
+    <div class="ingredient"><div class="emoji">🥡</div><div class="qty">Postgres sin tupper</div><div class="name">unlogged tables</div></div>
+  </div>
+  </div>
+  <aside class="notes">
+    Los ingredientes. Ocho cambios en total, todos chiquitos.
+    Ninguno es un refactor heroico: son líneas de configuración. Vamos uno por uno.
+    ~8 s
+  </aside>
+</section>
+
+<section>
+  <div class="split">
+    <img class="photo" src="img/templates/petrona_cocinando.jpg" alt="Doña Petrona cocinando con varias ollas en el fuego">
+    <div>
+      <div class="lower-third"><span class="tag">Paso 1</span><span class="title">Prender todas las hornallas</span></div>
+      <pre class="big"><code><span class="c"># test/test_helper.rb</span>
+<span class="hash fragment fade-out" data-fragment-index="1">#</span><span class="line"> parallelize(workers: <span class="y">:number_of_processors</span>)</span></code></pre>
+      <p class="small muted">Comentada desde el primer commit.<br>La suite usaba 1 hornalla de 8.</p>
+      <div class="stat fragment" data-fragment-index="2"><span class="num">709 → 259 s</span></div>
+      <p class="fragment" data-fragment-index="2"><span class="pill">2,7× borrando un carácter</span></p>
+    </div>
+  </div>
+  <aside class="notes">
+    Paso uno: prender todas las hornallas.
+    Rails genera esta línea en el test_helper. En nuestra app estaba comentada desde el primer commit. La suite usaba un hilo de ocho.
+    (Click: se borra el numeral.) Borro un carácter...
+    (Click.) ...y pasamos de 709 a 259 segundos. 2,7 veces más rápido.
+    Ojo: cada worker tiene su propia base, y hay que cuidar el estado compartido: archivos en disco, contadores de throttling. Nosotros reseteamos Rack::Attack en el setup.
+    ~30 s
+  </aside>
+</section>
+
+<section>
+  <div class="split">
+    <img class="meme" src="img/memes/saltbae.jpg" alt="Meme de Salt Bae tirando sal: 'BCrypt::Engine.cost = MIN_COST'">
+    <div>
+      <div class="lower-third"><span class="tag">Paso 2</span><span class="title">Una pizca de sal</span></div>
+      <p>Devise ya bajaba el costo en test.<br><strong>Pero solo para Devise.</strong></p>
+      <p class="muted small">Nuestro código hasheaba códigos de firma con <code>BCrypt::Password.create</code> a costo 12. Un hash: 1,6 s. El test más lento: 29 s.</p>
+      <pre><code><span class="c"># test/test_helper.rb</span>
+BCrypt::Engine.cost = BCrypt::Engine::<span class="y">MIN_COST</span></code></pre>
+      <div class="stat fragment"><span class="num">−44 s</span><span class="what">Buscá <code>BCrypt::Password.create</code> en tu app</span></div>
+    </div>
+  </div>
+  <aside class="notes">
+    Paso dos: una pizca de sal. Literal, bcrypt tiene salt.
+    Devise ya tenía stretches en 1 para test. Pero eso cubre solo a Devise.
+    Nosotros llamábamos a BCrypt directo para hashear códigos de firma, con el costo de producción. Un hash tardaba 1,6 segundos, y el test más lento, 29.
+    Una línea, 44 segundos menos. Tarea para el hogar: busquen BCrypt::Password.create en su código.
+    ~23 s
+  </aside>
+</section>
+
+<section>
+  <div class="split">
+    <img class="meme" src="img/memes/scooby.jpg" alt="Meme de Scooby-Doo: al desenmascarar 'Tests de autorización lentos' aparece 'La página de 404 que lista todas las rutas'">
+    <div>
+      <div class="lower-third"><span class="tag">Paso 3</span><span class="title">La 404 barata</span></div>
+      <h3>Pediste un vaso de agua y el mozo te recita la carta entera.</h3>
+      <p class="muted small">Cada 404 renderizaba la página de desarrollo, con <strong>todas las rutas</strong> de la app: ~0,7 s por request. En una app multi-tenant, «un extraño recibe 404» es un test que se repite mucho.</p>
+      <pre><code><span class="c"># config/environments/test.rb</span>
+config.consider_all_requests_local = <span class="k">false</span></code></pre>
+      <div class="stat fragment"><span class="num">−27 s</span></div>
+    </div>
+  </div>
+  <aside class="notes">
+    Paso tres. Los tests de autorización eran lentos y no sabíamos por qué. Le sacamos la máscara...
+    Era la página de 404 de desarrollo. Con consider_all_requests_local en true, cada 404 arma esa página que lista todas las rutas de la app. Siete décimas por request.
+    Es como pedir un vaso de agua y que el mozo te recite la carta entera.
+    Y en una app multi-tenant tenés un montón de tests que chequean que alguien de afuera reciba 404. Todos pagaban la carta.
+    Una línea: 27 segundos menos.
+    ~23 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Pasos 4, 5 y 6</span><span class="title">Lo que vuelve intacto a la cocina</span></div>
+  <div class="plates">
+    <div class="plate fragment"><div class="emoji">📊</div><h3>SimpleCov</h3><p>Siempre prendido.<br>Nadie leía el reporte.</p><div class="saved">−19 s</div></div>
+    <div class="plate fragment"><div class="emoji">📺</div><h3>minitest-reporters</h3><p>Redibuja la terminal<br>después de cada test.</p><div class="saved">−8 s</div></div>
+    <div class="plate fragment"><div class="emoji">🔫</div><h3>Bullet</h3><p>Con <code>raise = false</code>:<br>nunca falla, solo loguea.</p><div class="saved">−3% CPU</div></div>
+  </div>
+  <div class="rule fragment">Si no puede romper tu build, solo te cuesta tiempo.</div>
+  </div>
+  <aside class="notes">
+    Pasos cuatro, cinco y seis: lo que vuelve intacto a la cocina. Platos que salen, nadie toca, y vuelven.
+    (Click.) SimpleCov, prendido en cada corrida. Nadie miraba el reporte. 19 segundos.
+    (Click.) La barrita de progreso de minitest-reporters: redibuja la terminal después de cada test. 8 segundos. Los puntitos de Minitest ya te muestran los errores.
+    (Click.) Y Bullet, el detector de N+1. Lo teníamos con raise en false, así que nunca rompía nada. Solo escribía un log.
+    (Click.) La regla: si algo no puede romper tu build, solo te cuesta tiempo.
+    Si querés coverage de vez en cuando: require simplecov if ENV COVERAGE.
+    ~25 s
+
+    Si preguntan por qué Bullet aparece como "−3% CPU" y no en segundos: en la notebook su ahorro queda dentro del ruido del reloj (±10 s), pero el CPU baja en cada corrida. En un benchmark de un solo proceso le sacó el 16% de CPU. La explicación completa está en las notas de la slide de CI.
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+    <img class="meme" style="max-height: 640px; transform: rotate(1deg)" src="img/memes/sandwich.jpg" alt="Meme de Gordon Ramsay: '¿Qué sos?' 'Un Bullet con raise = false'">
+  </div>
+  <aside class="notes">
+    (Pausa para la risa. Pasar rápido.)
+    ~3 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Paso 7</span><span class="title">Bajarle el volumen al relator</span></div>
+  <div class="relator"><span>¡SELEEEEEECT!</span></div>
+  <p>En test, Rails loguea en <code>debug</code>: cada query se formatea<br>y se escribe en <code>log/test.log</code>, que llega a <strong>gigas</strong>.</p>
+  <pre class="big"><code><span class="c"># config/environments/test.rb</span>
+config.log_level = ENV.fetch(<span class="s">"RAILS_LOG_LEVEL"</span>, <span class="s">"warn"</span>)</code></pre>
+  <div class="stat fragment"><span class="num">−16 s</span><span class="what">y −10% de CPU</span></div>
+  </div>
+  <aside class="notes">
+    Paso siete: bajarle el volumen al relator.
+    Por defecto, en test el log está en debug. Cada query se relata como un gol de media cancha y se escribe en test.log. Ese archivo llega a pesar gigas.
+    Lo pasamos a warn, y si un día necesito el SQL de un test: RAILS_LOG_LEVEL=debug y listo.
+    16 segundos y diez por ciento de CPU.
+    ~18 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Paso 8</span><span class="title">Postgres sin tupper</span></div>
+  <h3>Los datos de test se tiran al final.<br>No hace falta que sobrevivan a un apagón.</h3>
+  <pre><code><span class="c"># config/environments/test.rb</span>
+ActiveSupport.on_load(<span class="y">:active_record_postgresqladapter</span>) <span class="k">do</span>
+  <span class="k">self</span>.create_unlogged_tables = <span class="k">true</span>
+<span class="k">end</span></code></pre>
+  <p class="small muted">Unlogged tables: Postgres no escribe el WAL, el log que usa para recuperarse de un crash.<br>En CI, además: <code>fsync</code>, <code>synchronous_commit</code> y <code>full_page_writes</code> en <code>off</code>. <a class="tip-link" href="https://x.com/fatkodima/status/1740703726812406022" target="_blank" rel="noopener">Tip de @fatkodima ↗</a></p>
+  <div class="stat fragment"><span class="num">−16 s</span><span class="what">−10%</span></div>
+  </div>
+  <aside class="notes">
+    Paso ocho: Postgres sin tupper.
+    Postgres guarda todo pensando en que se puede cortar la luz: escribe un log, el WAL, para recuperarse de un crash.
+    Pero los datos de test se tiran al terminar. No necesitan sobrevivir a nada.
+    Con unlogged tables, Postgres se saltea ese log. En CI, que es un Postgres descartable, también apagamos fsync y compañía. El tip es de fatkodima.
+    Ojo: aplica cuando se crea la tabla, así que hay que recrear las bases de test.
+    16 segundos, diez por ciento.
+    ~20 s
+
+    Si preguntan por fsync, synchronous_commit y full_page_writes (no hace falta decirlo en la charla):
+    - fsync = off: Postgres le pide al sistema operativo que escriba, pero no espera a que los datos lleguen al disco. Si se corta la luz, la base puede quedar corrupta.
+    - synchronous_commit = off: el COMMIT vuelve antes de que su registro del WAL esté en disco. Si hay un crash, se pierden las últimas transacciones confirmadas, pero la base no se corrompe.
+    - full_page_writes = off: después de cada checkpoint, Postgres copia la página entera al WAL la primera vez que la modifica, para poder recuperarla si el disco la deja escrita a medias. Apagado, el WAL es más chico, pero una página a medio escribir no se puede reparar.
+    - Las tres cambian seguridad ante crashes por velocidad. En producción, jamás. En el Postgres de CI, que es un contenedor que se tira al terminar el job, no hay nada que proteger.
+    - Por qué solo en CI y no en la notebook: son configuraciones de todo el servidor, y el Postgres local también tiene las bases de desarrollo. Las unlogged tables, en cambio, solo afectan a las tablas de test.
+    - Se complementan con las unlogged: la base principal de test sigue logged (db:test:prepare corre en development) y el catálogo de Postgres siempre escribe WAL.
+    - Honestidad: su efecto en CI no lo medí por separado.
+    - En GitHub Actions el contenedor de servicio no acepta flags, así que se aplican con ALTER SYSTEM y pg_reload_conf(). Ninguna necesita reiniciar.
+  </aside>
+</section>
+
+<section>
+  <div class="split">
+    <img class="meme" src="img/memes/pikachu.jpg" alt="Meme de Pikachu sorprendido: 'Postgres: menos trabajo. Benchmark: más lento. Yo:'">
+    <div>
+      <div class="lower-third"><span class="tag">Bloopers</span><span class="title">Se me quemó</span></div>
+      <p>El primer benchmark dijo que unlogged tables era <strong class="tomato">más lento</strong>.</p>
+      <p class="muted">Ese paso corría sobre bases recién creadas: sin estadísticas, con la caché fría. Todos los demás usaban bases calientes.</p>
+      <p class="fragment"><strong>No estaba midiendo la receta.<br>Estaba midiendo el horno.</strong></p>
+    </div>
+  </div>
+  <aside class="notes">
+    Como en todo programa de cocina en vivo, algo se quema.
+    Mi primer benchmark dijo que unlogged tables era MÁS lento. Postgres hacía menos trabajo y tardaba más. Imposible.
+    El problema: ese paso corría sobre bases recién creadas, sin estadísticas del planner y con caché fría. Los otros reusaban bases calientes.
+    (Click.) No estaba midiendo la receta: estaba midiendo el horno.
+    ~18 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Consejo de la abuela</span><span class="title">Precalentar el horno</span></div>
+  <ol class="rules">
+    <li class="fragment"><div>Medí con el horno caliente.<small>Bases ya creadas, con <code>ANALYZE</code>.</small></div></li>
+    <li class="fragment"><div>Alterná las variantes, y medí más de una vez.<small>Misma configuración, dos corridas: <strong>403 s</strong> y <strong>202 s</strong>.</small></div></li>
+    <li class="fragment"><div>Chequeá que el cambio se haya aplicado.<small>Revisé <code>relpersistence</code> antes de cada corrida.</small></div></li>
+  </ol>
+  <p class="fragment muted">Con el horno caliente: logged <strong>168 s</strong> · unlogged <strong class="basil">152 s</strong></p>
+  </div>
+  <aside class="notes">
+    Consejo de la abuela: precalentar el horno.
+    (Click.) Uno: medí con todo caliente. Bases creadas, con ANALYZE.
+    (Click.) Dos: alterná y repetí. En mi primera ronda, la misma configuración me dio 403 segundos una vez y 202 la siguiente. El doble. Con ese ruido no medís nada.
+    (Click.) Tres: chequeá que el cambio se aplicó. En una ronda creí medir unlogged y las tablas seguían logged.
+    (Click.) Bien medido: 168 contra 152. Unlogged gana.
+    ~20 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <h2 style="margin-bottom:.15em">Y acá tengo una que preparé antes…</h2>
+  <p class="muted small" style="margin-bottom:22px">Suite completa, segundos de reloj, notebook con 4 núcleos. Cada barra suma un cambio a la anterior.</p>
+  <div class="chart">
+    <div class="label"><b>Original</b>, un proceso</div><div class="track"><div class="bar first" style="--w:100; --i:0">709</div></div>
+    <div class="label">+ <b>parallelize</b></div><div class="track"><div class="bar" style="--w:36.5; --i:1">259</div></div>
+    <div class="label">+ <b>bcrypt</b> mínimo</div><div class="track"><div class="bar" style="--w:30.3; --i:2">215</div></div>
+    <div class="label">+ <b>404</b> barata</div><div class="track"><div class="bar" style="--w:26.5; --i:3">188</div></div>
+    <div class="label">− <b>SimpleCov</b></div><div class="track"><div class="bar" style="--w:23.8; --i:4">169</div></div>
+    <div class="label">− <b>progress bar</b></div><div class="track"><div class="bar" style="--w:22.7; --i:5">161</div></div>
+    <div class="label">− <b>Bullet</b>, log <b>warn</b></div><div class="track"><div class="bar" style="--w:22.3; --i:6">158</div></div>
+    <div class="label">+ <b>unlogged</b> tables</div><div class="track"><div class="bar last" style="--w:20; --i:7">~142</div></div>
+  </div>
+  <div class="big-stamp fragment"><span>5<span class="x">×</span></span><small>más rápido</small></div>
+  <figure class="polaroid" style="position:absolute; right:20px; bottom:0; width:170px; margin:0">
+    <img src="img/templates/petrona_torta.jpg" alt="Doña Petrona decorando una torta de varios pisos, 1937">
+    <figcaption>la que preparé antes</figcaption>
+  </figure>
+  </div>
+  <aside class="notes">
+    Y como en todo programa de cocina... ¡acá tengo una que preparé antes!
+    (Las barras crecen solas.) De 709 a 142. Lo más grande es paralelizar, pero fíjense que los otros cambios juntos sacan otros 117 segundos.
+    (Click: sello.) Cinco veces más rápido.
+    Si preguntan: el último valor es estimado, del A/B de unlogged. El ruido entre corridas es de unos ±10 segundos.
+    ~20 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">En la cocina del restaurante</span><span class="title">CI con 2 CPUs</span></div>
+  <div class="versus">
+    <div><div class="big before">301 s</div><div class="cap">antes · mediana de 39 corridas</div></div>
+    <div class="arrow">→</div>
+    <div><div class="big after">143 s</div><div class="cap">después · mediana de 3 corridas</div></div>
+  </div>
+  <p class="center"><strong>2,1× en GitHub Actions.</strong> Con 2 procesos, paralelizar da 2× como máximo.<br>El resto lo ponen los otros ingredientes.</p>
+  <p class="center small muted fragment">En una notebook con núcleos de sobra, los costos chicos casi no mueven el reloj.<br>En un runner con 2 CPUs, cada segundo de CPU ahorrado se nota.</p>
+  </div>
+  <aside class="notes">
+    ¿Y en la cocina del restaurante? GitHub Actions, con dos CPUs.
+    De 301 segundos a 143. Más del doble.
+    Y acá está lo interesante: con dos procesos, paralelizar te da dos veces como mucho. Lo que pasa de dos lo ponen los cambios chiquitos.
+    (Click.) En mi notebook, sacar Bullet o el log casi no movía el reloj, porque tenía núcleos de sobra. Pero el tiempo de CPU bajaba en cada paso. En un runner chico, ese CPU es tiempo de reloj.
+    ~20 s
+
+    Para explicar por qué importa el CPU aunque el reloj no se mueva (si preguntan, o si sobra tiempo):
+    - Reloj y CPU miden cosas distintas. El reloj es cuánto esperás vos. El CPU es cuánto trabajo hizo la máquina, sumando todos los procesos.
+    - Con workers en paralelo, el reloj lo marca el worker más lento y las esperas a Postgres. Si un worker termina antes, su núcleo queda libre y nadie lo aprovecha. Ahorrar CPU ahí no acorta la espera: la máquina trabaja menos, pero vos esperás lo mismo.
+    - En la notebook: 4 núcleos, 8 hilos. Sacar el reporter, Bullet y el log bajó 142 segundos de CPU (753 → 611), y el reloj apenas se movió.
+    - En CI con 2 CPUs no sobra nada: los dos workers y el propio Postgres se reparten esas dos CPUs. Cada segundo de CPU que sacás es casi un segundo menos de espera. Por eso en CI ganamos 2,1×, más que el 2× que da paralelizar.
+    - Analogía de cocina: en una cocina con ocho hornallas, que una olla tarde un poco más no cambia la hora de la cena. Con dos hornallas, cada minuto de cada olla se suma.
+    - Además: los minutos de CI se pagan, varios jobs comparten runner, y en la notebook ese CPU compite con el editor, el navegador y la batería.
+    - Y el ahorro escala: cuando la suite crece o el runner es más chico, esa sobrecarga deja de esconderse.
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Para llevar</span><span class="title">Tips del chef</span></div>
+  <div class="tips">
+    <div class="tip"><b>No estaba en los tests.</b>Lo que más ganó fue configuración: una línea comentada, un costo de bcrypt, una página de error.</div>
+    <div class="tip"><b>Medí cada cambio, más de una vez.</b>Con el horno caliente y alternando. Si no, medís ruido.</div>
+    <div class="tip"><b>Mirá el CPU, no solo el reloj.</b>Lo que en tu notebook no se nota, en CI sí.</div>
+    <div class="tip"><b>Lo que no puede fallar, solo cuesta.</b>Coverage que nadie lee, un Bullet que no rompe, una barrita de progreso.</div>
+  </div>
+  </div>
+  <aside class="notes">
+    Cuatro tips para llevar.
+    Uno: lo que más ganó no estaba en los tests. Era configuración.
+    Dos: medí cada cambio por separado, varias veces, con el horno caliente.
+    Tres: mirá el tiempo de CPU, no solo el reloj.
+    Cuatro: lo que no puede romper tu build, solo te cuesta tiempo.
+    ~18 s
+  </aside>
+</section>
+
+<section>
+  <div class="stage">
+  <div class="lower-third"><span class="tag">Sacale una foto 📸</span><span class="title">La receta entera</span></div>
+  <pre class="big" style="margin-top:0"><code><span class="c"># test/test_helper.rb</span>
+parallelize(workers: <span class="y">:number_of_processors</span>)
+BCrypt::Engine.cost = BCrypt::Engine::<span class="y">MIN_COST</span>
+
+<span class="c"># config/environments/test.rb</span>
+config.consider_all_requests_local = <span class="k">false</span>
+config.log_level = ENV.fetch(<span class="s">"RAILS_LOG_LEVEL"</span>, <span class="s">"warn"</span>)
+ActiveSupport.on_load(<span class="y">:active_record_postgresqladapter</span>) <span class="k">do</span>
+  <span class="k">self</span>.create_unlogged_tables = <span class="k">true</span>
+<span class="k">end</span>
+<span class="del">Bullet.enable = true</span>
+
+<span class="c"># Gemfile</span>
+<span class="del">gem "simplecov"</span>
+<span class="del">gem "minitest-reporters"</span></code></pre>
+  </div>
+  <aside class="notes">
+    Y la receta entera entra en una slide. Sáquenle una foto.
+    Pruébenla en su app y después me cuentan cuánto tardaba la suya.
+    ~8 s
+  </aside>
+</section>
+
+<section>
+  <div class="finale">
+    <h1>¡Buen provecho!</h1>
+    <p style="font-size:1.4em; font-family:'Fraunces',serif; font-weight:600">¿Preguntas?</p>
+    <p class="muted">@fesilvajacquier</p>
+  </div>
+  <div class="gingham"></div>
+  <aside class="notes">
+    ¡Buen provecho! ¿Preguntas?
+  </aside>
+</section>
+
+</div>
+</div>
+
+<script src="vendor/reveal/reveal.js"></script>
+<script src="vendor/reveal/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+    center: false,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    backgroundTransition: 'fade',
+    plugins: [RevealNotes],
+  });
+
+  const timer = document.getElementById('kitchen-timer');
+  const timerText = timer.querySelector('span');
+  const budget = 5 * 60;
+  let startedAt = null;
+
+  function renderTimer() {
+    const elapsed = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
+    const left = budget - elapsed;
+    const abs = Math.abs(left);
+    timerText.textContent = (left < 0 ? '+' : '') + Math.floor(abs / 60) + ':' + String(abs % 60).padStart(2, '0');
+    timer.classList.toggle('hurry', left <= 60);
+  }
+
+  Reveal.on('slidechanged', (event) => {
+    if (!startedAt && event.indexh > 0) startedAt = Date.now();
+  });
+  Reveal.addKeyBinding({ keyCode: 84, key: 'T', description: 'Mostrar/ocultar timer' }, () => timer.classList.toggle('hidden'));
+  Reveal.addKeyBinding({ keyCode: 82, key: 'R', description: 'Reiniciar timer' }, () => { startedAt = null; renderTimer(); });
+  setInterval(renderTimer, 500);
+  renderTimer();
+</script>
+</body>
+</html>
