@@ -6,6 +6,9 @@ La versión escrita, con todos los números y el detalle técnico, está en [ART
 
 ## Presentar
 
+Publicada en https://fesilvajacquier.github.io/test-perf-talk/.
+
+
 Abrí `index.html` en el navegador. Todo está en el repo (reveal.js 5.2.1 y fuentes en `vendor/` y `fonts/`), así que funciona sin conexión.
 
 - `S`: vista del orador, con notas y tiempos estimados por slide.
